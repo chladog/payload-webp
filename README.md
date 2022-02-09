@@ -47,7 +47,7 @@ By default webp images are being processed to reduce their filesize as well.
 ## Plugin options
 Optionally you can pass JSON with following plugin options to tweak compression or limit conversion to particular mimeTypes or specific upload-enabled collections.
 ```JS
-interface webpPluginOptions {
+interface WebpPluginOptions {
   /**
    * Which mime types convert to webp.
    * Defaults to: ```["image/jpeg", "image/png", "image/webp"]```

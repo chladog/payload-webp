@@ -15,7 +15,7 @@ import {
   AfterDeleteHook,
 } from "payload/dist/collections/config/types";
 
-interface webpPluginOptions {
+export interface WebpPluginOptions {
   /**
    * Which mime types convert to webp.
    * Defaults to: ```["image/jpeg", "image/png", "image/webp"]```
@@ -44,7 +44,7 @@ interface webpPluginOptions {
 }
 
 const webp =
-  (pluginOptions?: webpPluginOptions) =>
+  (pluginOptions?: WebpPluginOptions) =>
   (config: Config): Config => {
     const sharpWebpOpts = pluginOptions?.sharpWebpOptions
       ? {
@@ -58,12 +58,12 @@ const webp =
         };
 
     // mock plugin to avoid webpack errors in frontend
-    config.admin.webpack = (config) => {
-      config.resolve.alias[path.resolve(__dirname, "./webp")] = path.resolve(
+    config.admin.webpack = (webpackConfig) => {
+      webpackConfig.resolve.alias[path.resolve(__dirname, "./webp")] = path.resolve(
         __dirname,
         "./mock-plugin"
       );
-      return config;
+      return webpackConfig;
     };
 
     const uploadCollections = pluginOptions?.collections
