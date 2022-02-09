@@ -12,6 +12,7 @@
     "outDir": "./lib",
     "rootDir": "./src",
     "jsx": "react",
+    "declaration": true
   },
   "ts-node": {
     "transpileOnly": true
