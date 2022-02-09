@@ -1,0 +1,47 @@
+{
+  "name": "payload-webp",
+  "version": "1.0.0",
+  "description": "payloadcms/payload plugin for automatic image conversion to webp format",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare" : "npm run build",
+    "prepublishOnly" : "npm test && npm run lint",
+    "preversion" : "npm run lint",
+    "version" : "npm run format && git add -A src",
+    "postversion" : "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/chladog/payload-webp.git"
+  },
+  "keywords": [
+    "payload",
+    "webp"
+  ],
+  "author": "Lukas Chladek <lukaschladek@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/chladog/payload-webp/issues"
+  },
+  "homepage": "https://github.com/chladog/payload-webp#readme",
+  "devDependencies": {
+    "@types/node": "^17.0.16",
+    "@types/sharp": "^0.29.5",
+    "prettier": "^2.5.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.5.5"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "peerDependencies": {
+    "payload": "0.14"
+  },
+  "dependencies": {
+    "deepmerge": "^4.2.2"
+  }
+}
