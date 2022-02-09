@@ -56,7 +56,7 @@ const webp =
 
     // mock plugin to avoid webpack errors in frontend
     config.admin.webpack = (webpackConfig) => {
-      webpackConfig.resolve.alias[path.resolve(__dirname, './webp')] = path.resolve(__dirname, './mock-plugin');
+      webpackConfig.resolve.alias['payload-webp'] = path.resolve(__dirname, './mock-plugin');
       return webpackConfig;
     };
 
