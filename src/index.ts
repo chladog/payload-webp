@@ -5,12 +5,11 @@ import path from 'path';
 import fs from 'fs';
 
 import { FileData, IncomingUploadType } from 'payload/dist/uploads/types';
-import { Field, CollectionConfig } from 'payload/types';
+import { Field, CollectionConfig, CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload/types';
 import sharp from 'sharp';
 import { ErrorDeletingFile } from 'payload/errors';
 import { fileExists, getMetadata } from './utils';
 import getFileMetadataFields from './getFileMetadataFields';
-import { AfterChangeHook, AfterDeleteHook } from 'payload/dist/collections/config/types';
 
 export interface WebpPluginOptions {
   /**
@@ -114,7 +113,7 @@ const webp =
       };
       uploadCollection.fields.push(webpFields);
 
-      const afterChangeHook: AfterChangeHook = async (args) => {
+      const afterChangeHook: CollectionAfterChangeHook = async (args) => {
         const payload = args.req.payload;
         let staticPath = uploadOptions.staticDir;
 
@@ -187,7 +186,7 @@ const webp =
         return args.doc;
       };
 
-      const afterDeleteHook: AfterDeleteHook = async ({ req, id, doc }) => {
+      const afterDeleteHook: CollectionAfterDeleteHook = async ({ req, id, doc }) => {
         if (uploadCollection.upload && doc.webp?.filename) {
           const staticPath = path.resolve(req.payload.config.paths.configDir, uploadOptions.staticDir);
 
