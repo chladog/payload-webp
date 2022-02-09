@@ -1,19 +1,16 @@
-import { Config } from "payload/config";
+import { Config } from 'payload/config';
 
-import merge from "deepmerge";
-import path from "path";
-import fs from "fs";
+import merge from 'deepmerge';
+import path from 'path';
+import fs from 'fs';
 
-import { FileData, IncomingUploadType } from "payload/dist/uploads/types";
-import { Field, CollectionConfig } from "payload/types";
-import sharp from "sharp";
-import { ErrorDeletingFile } from "payload/errors";
-import { fileExists, getMetadata } from "./utils";
-import getFileMetadataFields from "./getFileMetadataFields";
-import {
-  AfterChangeHook,
-  AfterDeleteHook,
-} from "payload/dist/collections/config/types";
+import { FileData, IncomingUploadType } from 'payload/dist/uploads/types';
+import { Field, CollectionConfig } from 'payload/types';
+import sharp from 'sharp';
+import { ErrorDeletingFile } from 'payload/errors';
+import { fileExists, getMetadata } from './utils';
+import getFileMetadataFields from './getFileMetadataFields';
+import { AfterChangeHook, AfterDeleteHook } from 'payload/dist/collections/config/types';
 
 export interface WebpPluginOptions {
   /**
@@ -40,7 +37,7 @@ export interface WebpPluginOptions {
    * Array of collection slugs that should have images converted to webp.
    * By default all collections with upload property will convert images to webp.
    */
-  collections?: CollectionConfig["slug"][];
+  collections?: CollectionConfig['slug'][];
 }
 
 const webp =
@@ -59,30 +56,23 @@ const webp =
 
     // mock plugin to avoid webpack errors in frontend
     config.admin.webpack = (webpackConfig) => {
-      webpackConfig.resolve.alias[path.resolve(__dirname, "./webp")] = path.resolve(
-        __dirname,
-        "./mock-plugin"
-      );
+      webpackConfig.resolve.alias[path.resolve(__dirname, './webp')] = path.resolve(__dirname, './mock-plugin');
       return webpackConfig;
     };
 
     const uploadCollections = pluginOptions?.collections
       ? config.collections.filter(
-          (collection) =>
-            pluginOptions.collections.includes(collection.slug) &&
-            !!collection.upload
+          (collection) => pluginOptions.collections.includes(collection.slug) && !!collection.upload,
         )
       : config.collections.filter((collection) => !!collection.upload);
 
     uploadCollections.forEach((uploadCollection) => {
       const uploadOptions: IncomingUploadType =
-        typeof uploadCollection.upload === "object"
-          ? uploadCollection.upload
-          : {};
+        typeof uploadCollection.upload === 'object' ? uploadCollection.upload : {};
 
       const webpFields: Field = {
-        name: "webp",
-        type: "group",
+        name: 'webp',
+        type: 'group',
         admin: {
           readOnly: true,
           disabled: true,
@@ -96,12 +86,12 @@ const webp =
             return undefined;
           }),
           {
-            name: "sizes",
-            type: "group",
+            name: 'sizes',
+            type: 'group',
             fields: uploadOptions.imageSizes.map((size) => ({
               label: size.name,
               name: size.name,
-              type: "group",
+              type: 'group',
               admin: {
                 disabled: true,
               },
@@ -128,36 +118,19 @@ const webp =
         const payload = args.req.payload;
         let staticPath = uploadOptions.staticDir;
 
-        if (uploadOptions.staticDir.indexOf("/") !== 0) {
-          staticPath = path.resolve(
-            payload.config.paths.configDir,
-            uploadOptions.staticDir
-          );
+        if (uploadOptions.staticDir.indexOf('/') !== 0) {
+          staticPath = path.resolve(payload.config.paths.configDir, uploadOptions.staticDir);
         }
 
-        if (
-          !(
-            pluginOptions?.mimeTypes || [
-              "image/jpeg",
-              "image/png",
-              "image/webp",
-            ]
-          ).includes(args.doc.mimeType)
-        ) {
+        if (!(pluginOptions?.mimeTypes || ['image/jpeg', 'image/png', 'image/webp']).includes(args.doc.mimeType)) {
           return;
         }
         const { file } = args.req.files || {};
-        const filename =
-          args.doc.filename.substring(0, args.doc.filename.lastIndexOf(".")) ||
-          args.doc.filename;
+        const filename = args.doc.filename.substring(0, args.doc.filename.lastIndexOf('.')) || args.doc.filename;
 
         if (
           args.doc.webp?.filename &&
-          filename ===
-            args.doc.webp.filename.substring(
-              0,
-              args.doc.filename.lastIndexOf(".")
-            )
+          filename === args.doc.webp.filename.substring(0, args.doc.filename.lastIndexOf('.'))
         ) {
           return;
         }
@@ -179,15 +152,10 @@ const webp =
             await converted.toFile(imagePath);
           }
 
-          Object.assign(
-            args.doc.webp,
-            getMetadata(filenameExt, bufferObject.info)
-          );
+          Object.assign(args.doc.webp, getMetadata(filenameExt, bufferObject.info));
         }
         if (args?.req?.payloadUploadSizes) {
-          for (const [key, value] of Object.entries(
-            args.req.payloadUploadSizes
-          )) {
+          for (const [key, value] of Object.entries(args.req.payloadUploadSizes)) {
             const converted = sharp(value).webp(sharpWebpOpts);
             const bufferObject = await converted.toBuffer({
               resolveWithObject: true,
@@ -205,10 +173,7 @@ const webp =
               await converted.toFile(imagePath);
             }
 
-            args.doc.webp.sizes[key] = getMetadata(
-              imageNameWithDimensions,
-              bufferObject.info
-            );
+            args.doc.webp.sizes[key] = getMetadata(imageNameWithDimensions, bufferObject.info);
           }
         }
 
@@ -224,10 +189,7 @@ const webp =
 
       const afterDeleteHook: AfterDeleteHook = async ({ req, id, doc }) => {
         if (uploadCollection.upload && doc.webp?.filename) {
-          const staticPath = path.resolve(
-            req.payload.config.paths.configDir,
-            uploadOptions.staticDir
-          );
+          const staticPath = path.resolve(req.payload.config.paths.configDir, uploadOptions.staticDir);
 
           const fileToDelete = `${staticPath}/${doc.webp.filename}`;
 
