@@ -96,7 +96,7 @@ const webp =
               },
               fields: [
                 ...getFileMetadataFields(({ data }) => {
-                  const sizeFilename = data?.sizes?.[size.name]?.filename;
+                  const sizeFilename = data?.webp?.sizes?.[size.name]?.filename;
                   if (sizeFilename) {
                     return `${config.serverURL}${uploadOptions.staticURL}/${sizeFilename}`;
                   }
