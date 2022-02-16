@@ -84,10 +84,14 @@ const webp =
 
             return undefined;
           }),
-          {
-            name: 'sizes',
-            type: 'group',
-            fields: uploadOptions.imageSizes.map((size) => ({
+        ],
+      };
+      if (uploadOptions?.imageSizes && Array.isArray(uploadOptions.imageSizes)) {
+        webpFields.fields.push({
+          name: 'sizes',
+          type: 'group',
+          fields:
+            uploadOptions?.imageSizes?.map((size) => ({
               label: size.name,
               name: size.name,
               type: 'group',
@@ -104,13 +108,12 @@ const webp =
                   return undefined;
                 }),
               ],
-            })),
-            admin: {
-              disabled: true,
-            },
+            })) || [],
+          admin: {
+            disabled: true,
           },
-        ],
-      };
+        });
+      }
       uploadCollection.fields.push(webpFields);
 
       const afterChangeHook: CollectionAfterChangeHook = async (args) => {
