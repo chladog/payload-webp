@@ -43,9 +43,8 @@ export interface WebpPluginOptions {
 const webp =
   (pluginOptions?: WebpPluginOptions) =>
   (incomingConfig: Config): Config => {
-
     // duplicate config
-    const config = deepmerge({}, incomingConfig)
+    const config = deepmerge({}, incomingConfig);
 
     const sharpWebpOpts = pluginOptions?.sharpWebpOptions
       ? {
