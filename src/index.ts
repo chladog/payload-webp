@@ -10,6 +10,7 @@ import sharp from 'sharp';
 import { ErrorDeletingFile } from 'payload/errors';
 import { fileExists, getMetadata } from './utils';
 import getFileMetadataFields from './getFileMetadataFields';
+import deepmerge from 'deepmerge';
 
 export interface WebpPluginOptions {
   /**
@@ -41,7 +42,11 @@ export interface WebpPluginOptions {
 
 const webp =
   (pluginOptions?: WebpPluginOptions) =>
-  (config: Config): Config => {
+  (incomingConfig: Config): Config => {
+
+    // duplicate config
+    const config = deepmerge({}, incomingConfig)
+
     const sharpWebpOpts = pluginOptions?.sharpWebpOptions
       ? {
           force: true,
@@ -56,7 +61,8 @@ const webp =
     // mock plugin to avoid webpack errors in frontend
     config.admin.webpack = (webpackConfig) => {
       webpackConfig.resolve.alias['payload-webp'] = path.resolve(__dirname, './mock-plugin');
-      return webpackConfig;
+      // call incoming webpack function as well
+      return incomingConfig.admin.webpack(webpackConfig);
     };
 
     const uploadCollections = pluginOptions?.collections
