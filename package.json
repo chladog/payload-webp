@@ -1,6 +1,6 @@
 {
   "name": "payload-webp",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "payloadcms/payload plugin for automatic image conversion to webp format",
   "main": "lib/index.js",
   "scripts": {
