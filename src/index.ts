@@ -64,7 +64,7 @@ const webp =
     config.admin.webpack = (webpackConfig) => {
       webpackConfig.resolve.alias['payload-webp'] = path.resolve(__dirname, './mock-plugin');
       // call incoming webpack function as well
-      return incomingConfig.admin?.webpack(webpackConfig) || webpackConfig;
+      return incomingConfig.admin?.webpack ? incomingConfig.admin.webpack(webpackConfig) : webpackConfig;
     };
 
     const uploadCollections = pluginOptions?.collections
