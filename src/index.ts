@@ -87,7 +87,7 @@ const webp =
         fields: [
           ...getFileMetadataFields(({ data }) => {
             if (data?.webp?.filename) {
-              return `${config.serverURL}${uploadOptions.staticURL}/${data.webp.filename}`;
+              return `${config.serverURL || ''}${uploadOptions.staticURL}/${data.webp.filename}`;
             }
 
             return undefined;
@@ -110,7 +110,7 @@ const webp =
                 ...getFileMetadataFields(({ data }) => {
                   const sizeFilename = data?.webp?.sizes?.[size.name]?.filename;
                   if (sizeFilename) {
-                    return `${config.serverURL}${uploadOptions.staticURL}/${sizeFilename}`;
+                    return `${config.serverURL || ''}${uploadOptions.staticURL}/${sizeFilename}`;
                   }
 
                   return undefined;

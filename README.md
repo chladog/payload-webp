@@ -12,7 +12,6 @@
 import webp from "payload-webp";
 
 export default buildConfig({
-  serverURL: "http://localhost:3000",
   ...
   plugins: [
       webp(webpPluginOptions)
