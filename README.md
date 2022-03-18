@@ -71,6 +71,12 @@ interface WebpPluginOptions {
    * Array of collection slugs that should have images converted to webp.
    * By default all collections with upload property will convert images to webp.
    */
-  collections?: CollectionConfig["slug"][];
+  collections?: CollectionConfig['slug'][];
+
+  /**
+   * By default image conversion happens asynchronously in the background for faster UX.
+   * By switching this flag hook and following request response will await for the image conversion.
+   */
+  sync?: boolean;
 }
 ```
