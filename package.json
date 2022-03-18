@@ -39,7 +39,7 @@
     "lib/**/*"
   ],
   "peerDependencies": {
-    "payload": "0.14"
+    "payload": "0.15"
   },
   "dependencies": {
     "deepmerge": "^4.2.2",
