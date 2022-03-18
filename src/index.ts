@@ -38,6 +38,12 @@ export interface WebpPluginOptions {
    * By default all collections with upload property will convert images to webp.
    */
   collections?: CollectionConfig['slug'][];
+
+  /**
+   * By default image conversion happens asynchronously in the background for faster UX.
+   * By switching this flag hook and following request response will await for the image conversion.
+   */
+  sync?: boolean;
 }
 
 const webp =
@@ -124,7 +130,7 @@ const webp =
       }
       uploadCollection.fields.push(webpFields);
 
-      const afterChangeHook: CollectionAfterChangeHook = async (args) => {
+      const convertImages = async (args) => {
         const payload = args.req.payload;
         let staticPath = uploadOptions.staticDir;
 
@@ -195,6 +201,15 @@ const webp =
           })
           .then();
         return args.doc;
+      };
+
+      const afterChangeHook: CollectionAfterChangeHook = async (args) => {
+        if (pluginOptions?.sync) {
+          return await convertImages(args);
+        } else {
+          convertImages(args);
+          return args.doc;
+        }
       };
 
       const afterDeleteHook: CollectionAfterDeleteHook = async ({ req, id, doc }) => {
