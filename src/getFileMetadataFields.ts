@@ -1,7 +1,7 @@
 import { Field, FieldHook } from 'payload/types';
 
 const getFileMetadataFields: (afterReadHook: FieldHook) => Field[] = (afterReadHook) => [
-  { name: 'filename', type: 'text', unique: true },
+  { name: 'filename', type: 'text', unique: false },
   {
     name: 'filesize',
     label: 'File Size',

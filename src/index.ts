@@ -247,6 +247,9 @@ const webp =
       };
 
       const afterChangeHook: CollectionAfterChangeHook = async (args) => {
+        if (!args.req.payloadUploadSizes) {
+          return args.doc;
+        }
         if (pluginOptions?.sync) {
           if (debug) {
             log(`starting SYNC conversion`);
