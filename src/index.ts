@@ -91,7 +91,7 @@ const webp =
       : config.collections.filter((collection) => !!collection.upload);
 
     if (debug) {
-      log('upload collections found: ' + uploadCollections.map(col => col.slug ).join(', '));
+      log('upload collections found: ' + uploadCollections.map((col) => col.slug).join(', '));
     }
 
     uploadCollections.forEach((uploadCollection) => {
@@ -118,7 +118,11 @@ const webp =
 
       if (uploadOptions?.imageSizes && Array.isArray(uploadOptions.imageSizes)) {
         if (debug) {
-          log(`found image sizes of upload collection "${uploadCollection.slug}": ${uploadOptions.imageSizes.map(imageSize => imageSize.name).join(', ')}`);
+          log(
+            `found image sizes of upload collection "${uploadCollection.slug}": ${uploadOptions.imageSizes
+              .map((imageSize) => imageSize.name)
+              .join(', ')}`,
+          );
         }
         webpFields.fields.push({
           name: 'sizes',
@@ -230,7 +234,7 @@ const webp =
         }
 
         if (debug) {
-          log(`updating collection: ${ uploadCollection.slug }, id: ${ args.doc.id }`);
+          log(`updating collection: ${uploadCollection.slug}, id: ${args.doc.id}`);
         }
         payload
           .update({
