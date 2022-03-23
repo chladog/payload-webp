@@ -11,6 +11,7 @@ import { ErrorDeletingFile } from 'payload/errors';
 import { fileExists, getMetadata } from './utils';
 import getFileMetadataFields from './getFileMetadataFields';
 import deepmerge from 'deepmerge';
+import chalk from 'chalk';
 
 export interface WebpPluginOptions {
   /**
@@ -44,13 +45,23 @@ export interface WebpPluginOptions {
    * By switching this flag hook and following request response will await for the image conversion.
    */
   sync?: boolean;
+
+  /**
+   * When true log messages for debugging purposes.
+   */
+  debug?: boolean;
 }
+
+const log = (message: string) => {
+  return console.log(chalk.inverse.bold('payload-webp-plugin:') + chalk(' ' + message));
+};
 
 const webp =
   (pluginOptions?: WebpPluginOptions) =>
   (incomingConfig: Config): Config => {
     // duplicate config
     const config = deepmerge({}, incomingConfig);
+    const debug = incomingConfig.debug || false;
 
     const sharpWebpOpts = pluginOptions?.sharpWebpOptions
       ? {
@@ -79,6 +90,10 @@ const webp =
         )
       : config.collections.filter((collection) => !!collection.upload);
 
+    if (debug) {
+      log('upload collections found: ' + uploadCollections.map(col => col.slug ).join(', '));
+    }
+
     uploadCollections.forEach((uploadCollection) => {
       const uploadOptions: IncomingUploadType =
         typeof uploadCollection.upload === 'object' ? uploadCollection.upload : {};
@@ -100,7 +115,11 @@ const webp =
           }),
         ],
       };
+
       if (uploadOptions?.imageSizes && Array.isArray(uploadOptions.imageSizes)) {
+        if (debug) {
+          log(`found image sizes of upload collection "${uploadCollection.slug}": ${uploadOptions.imageSizes.map(imageSize => imageSize.name).join(', ')}`);
+        }
         webpFields.fields.push({
           name: 'sizes',
           type: 'group',
@@ -152,6 +171,9 @@ const webp =
         }
 
         if (file) {
+          if (debug) {
+            log(`converting image`);
+          }
           const converted = sharp(file.data).webp(sharpWebpOpts);
           const bufferObject = await converted.toBuffer({
             resolveWithObject: true,
@@ -160,24 +182,36 @@ const webp =
           const imagePath = `${staticPath}/${filenameExt}`;
           const fileAlreadyExists = await fileExists(imagePath);
 
+          if (debug) {
+            log(`converted image: ${filenameExt}`);
+          }
           if (fileAlreadyExists) {
             fs.unlinkSync(imagePath);
           }
 
           if (!uploadOptions.disableLocalStorage) {
             await converted.toFile(imagePath);
+            if (debug) {
+              log(`saving image: ${imagePath}`);
+            }
           }
 
           Object.assign(args.doc.webp, getMetadata(filenameExt, bufferObject.info));
         }
         if (args?.req?.payloadUploadSizes) {
           for (const [key, value] of Object.entries(args.req.payloadUploadSizes)) {
+            if (debug) {
+              log(`converting image size: ${key}`);
+            }
             const converted = sharp(value).webp(sharpWebpOpts);
             const bufferObject = await converted.toBuffer({
               resolveWithObject: true,
             });
 
             const imageNameWithDimensions = `${filename}-${bufferObject.info.width}x${bufferObject.info.height}.webp`;
+            if (debug) {
+              log(`converted image size: ${imageNameWithDimensions}`);
+            }
             const imagePath = `${staticPath}/${imageNameWithDimensions}`;
             const fileAlreadyExists = await fileExists(imagePath);
 
@@ -186,13 +220,18 @@ const webp =
             }
 
             if (!uploadOptions.disableLocalStorage) {
+              if (debug) {
+                log(`saving image size: ${imagePath}`);
+              }
               await converted.toFile(imagePath);
             }
-
             args.doc.webp.sizes[key] = getMetadata(imageNameWithDimensions, bufferObject.info);
           }
         }
 
+        if (debug) {
+          log(`updating collection: ${ uploadCollection.slug }, id: ${ args.doc.id }`);
+        }
         payload
           .update({
             collection: uploadCollection.slug,
@@ -205,8 +244,14 @@ const webp =
 
       const afterChangeHook: CollectionAfterChangeHook = async (args) => {
         if (pluginOptions?.sync) {
+          if (debug) {
+            log(`starting SYNC conversion`);
+          }
           return await convertImages(args);
         } else {
+          if (debug) {
+            log(`starting ASYNC conversion`);
+          }
           convertImages(args);
           return args.doc;
         }
@@ -217,6 +262,10 @@ const webp =
           const staticPath = path.resolve(req.payload.config.paths.configDir, uploadOptions.staticDir);
 
           const fileToDelete = `${staticPath}/${doc.webp.filename}`;
+
+          if (debug) {
+            log(`attempting to delete image: ${fileToDelete}`);
+          }
 
           if (await fileExists(fileToDelete)) {
             fs.unlink(fileToDelete, (err) => {
@@ -229,6 +278,9 @@ const webp =
           if (doc.webp.sizes) {
             Object.values(doc.webp.sizes).forEach(async (size: FileData) => {
               const sizeToDelete = `${staticPath}/${size.filename}`;
+              if (debug) {
+                log(`attempting to delete image size file: ${fileToDelete}`);
+              }
               if (await fileExists(sizeToDelete)) {
                 fs.unlink(sizeToDelete, (err) => {
                   if (err) {
