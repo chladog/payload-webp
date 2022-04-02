@@ -240,13 +240,13 @@ const webp =
         }
         payload.findByID(args.doc.id).then(() => {
           payload
-          .update({
-            collection: uploadCollection.slug,
-            data: args.doc,
-            id: args.doc.id,
-          })
-          .then();
-        })
+            .update({
+              collection: uploadCollection.slug,
+              data: args.doc,
+              id: args.doc.id,
+            })
+            .then();
+        });
         return args.doc;
       };
 
