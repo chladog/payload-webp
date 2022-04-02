@@ -12,6 +12,7 @@ import { fileExists, getMetadata } from './utils';
 import getFileMetadataFields from './getFileMetadataFields';
 import deepmerge from 'deepmerge';
 import chalk from 'chalk';
+import { Payload } from 'payload';
 
 export interface WebpPluginOptions {
   /**
@@ -153,8 +154,9 @@ const webp =
       }
       uploadCollection.fields.push(webpFields);
 
+      // TODO: stop conversion when media gets deleted in meantime
       const convertImages = async (args) => {
-        const payload = args.req.payload;
+        const payload: Payload = args.req.payload;
         let staticPath = uploadOptions.staticDir;
 
         if (uploadOptions.staticDir.indexOf('/') !== 0) {
@@ -236,13 +238,15 @@ const webp =
         if (debug) {
           log(`updating collection: ${uploadCollection.slug}, id: ${args.doc.id}`);
         }
-        payload
+        payload.findByID(args.doc.id).then(() => {
+          payload
           .update({
             collection: uploadCollection.slug,
             data: args.doc,
             id: args.doc.id,
           })
           .then();
+        })
         return args.doc;
       };
 
