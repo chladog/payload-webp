@@ -238,7 +238,7 @@ const webp =
         if (debug) {
           log(`updating collection: ${uploadCollection.slug}, id: ${args.doc.id}`);
         }
-        payload.findByID(args.doc.id).then(() => {
+        payload.findByID({ id: args.doc.id, collection: uploadCollection.slug }).then(() => {
           payload
             .update({
               collection: uploadCollection.slug,
