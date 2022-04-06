@@ -192,7 +192,10 @@ const webp =
             log(`converted image: ${filenameExt}`);
           }
           if (fileAlreadyExists) {
-            fs.unlinkSync(imagePath);
+            fs.unlink(imagePath, (err) => {
+              if (err) log(err.message);
+              log(imagePath + ' was deleted');
+            });
           }
 
           if (!uploadOptions.disableLocalStorage) {
@@ -222,7 +225,10 @@ const webp =
             const fileAlreadyExists = await fileExists(imagePath);
 
             if (fileAlreadyExists) {
-              fs.unlinkSync(imagePath);
+              fs.unlink(imagePath, (err) => {
+                if (err) log(err.message);
+                log(imagePath + ' was deleted');
+              });
             }
 
             if (!uploadOptions.disableLocalStorage) {
