@@ -65,16 +65,12 @@ const webp =
     const debug = incomingConfig.debug || false;
 
     const sharpWebpOpts = pluginOptions?.sharpWebpOptions
-      ? {
-          force: true,
-          ...pluginOptions.sharpWebpOptions,
-        }
+      ? pluginOptions.sharpWebpOptions
       : {
-          nearLossless: true,
           quality: 50,
-          force: true,
         };
 
+    console.log(sharpWebpOpts);
     if (!config.admin) {
       config.admin = {};
     }
@@ -156,6 +152,7 @@ const webp =
 
       // TODO: stop conversion when media gets deleted in meantime
       const convertImages = async (args) => {
+        let data: any;
         const payload: Payload = args.req.payload;
         let staticPath = uploadOptions.staticDir;
 
@@ -205,14 +202,17 @@ const webp =
             }
           }
 
-          Object.assign(args.doc.webp, getMetadata(filenameExt, bufferObject.info));
+          data = {
+            webp: getMetadata(filenameExt, bufferObject.info)
+          }
+          data.webp.sizes = {};
         }
         if (args?.req?.payloadUploadSizes) {
           for (const [key, value] of Object.entries(args.req.payloadUploadSizes)) {
             if (debug) {
               log(`converting image size: ${key}`);
             }
-            const converted = sharp(value).webp(sharpWebpOpts);
+            const converted = sharp(value).toFormat('webp').webp(sharpWebpOpts);
             const bufferObject = await converted.toBuffer({
               resolveWithObject: true,
             });
@@ -237,7 +237,7 @@ const webp =
               }
               await converted.toFile(imagePath);
             }
-            args.doc.webp.sizes[key] = getMetadata(imageNameWithDimensions, bufferObject.info);
+            data.webp.sizes[key] = getMetadata(imageNameWithDimensions, bufferObject.info);
           }
         }
 
@@ -248,7 +248,7 @@ const webp =
           payload
             .update({
               collection: uploadCollection.slug,
-              data: args.doc,
+              data,
               id: args.doc.id,
             })
             .then();
