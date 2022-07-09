@@ -203,8 +203,8 @@ const webp =
           }
 
           data = {
-            webp: getMetadata(filenameExt, bufferObject.info)
-          }
+            webp: getMetadata(filenameExt, bufferObject.info),
+          };
           data.webp.sizes = {};
         }
         if (args?.req?.payloadUploadSizes) {
