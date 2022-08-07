@@ -3,3 +3,4 @@ const plugin = () => (config: any) => {
 };
 
 export default plugin;
+export const defaultResizeFactory = {};

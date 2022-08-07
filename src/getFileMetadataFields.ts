@@ -1,5 +1,14 @@
 import { Field, FieldHook } from 'payload/types';
 
+export interface ImageFields {
+  filename: string;
+  filesize: number;
+  width: number;
+  height: number;
+  mimeType: string;
+  url: string;
+}
+
 const getFileMetadataFields: (afterReadHook: FieldHook) => Field[] = (afterReadHook) => [
   { name: 'filename', type: 'text', unique: true },
   {
