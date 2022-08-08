@@ -64,7 +64,7 @@ export interface WebpPluginOptions {
 
   /**
    * By default image conversion happens asynchronously in the background for faster UX.
-   * By switching this flag hook and following request response will await for the image conversion.
+   * By switching this flag the hook and following request response will await for the image conversion.
    */
   sync?: boolean;
 
