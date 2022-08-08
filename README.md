@@ -145,7 +145,7 @@ mutation {
 }
 ```
 ### Arguments
-First Header  | Second Header
+Argument  | Description
 ------------- | -------------
 slug  | Upload collection slug in camelCase
 sort  | You can pass the sort parameter to set the direction in which images will be regenerated. Default: ```createdAt```
