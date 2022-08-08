@@ -26,7 +26,6 @@ export const fileExists = async (filename: string): Promise<boolean> => {
   }
 };
 
-
 export const executeAccess = async (operation, access: Access): Promise<AccessResult> => {
   if (access) {
     const result = await access(operation);
@@ -45,5 +44,3 @@ export const executeAccess = async (operation, access: Access): Promise<AccessRe
   if (!operation.disableErrors) throw new Forbidden();
   return false;
 };
-
-
