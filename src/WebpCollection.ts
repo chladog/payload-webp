@@ -5,7 +5,7 @@ import { ErrorDeletingFile } from 'payload/errors';
 import { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionConfig, Field } from 'payload/types';
 import getFileMetadataFields, { ImageFields } from './getFileMetadataFields';
 import { WebpPlugin } from './Plugin';
-import { fileExists, getMetadata } from './utils';
+import { fileExists } from './utils';
 import fs from 'fs';
 import deepmerge from 'deepmerge';
 import { PayloadRequest } from 'payload/dist/express/types';
@@ -80,7 +80,6 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
     doc: T;
     req: PayloadRequest;
   }) => {
-    let data: any;
     const payload: Payload = args.req.payload;
     let staticPath = (collection.upload as IncomingUploadType).staticDir;
 
@@ -94,47 +93,9 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
     const { file } = args.req.files || {};
 
     if (file) {
-      plugin.logger.log(`converting image`);
-
-      const { filename, filenameExt, bufferObject } = await plugin.convert(
-        file,
-        staticPath,
-        plugin.options.maxResizeOpts,
-        (collection.upload as IncomingUploadType).disableLocalStorage,
-      );
-
-      data = {
-        webp: getMetadata(filenameExt, bufferObject.info),
-      };
-      data.webp.sizes = {};
-
-      if ((collection.upload as IncomingUploadType).imageSizes) {
-        for (const size of (collection.upload as IncomingUploadType).imageSizes) {
-          plugin.logger.log(`converting image size: ${size.name}`);
-          const { filename } = await plugin.convert(
-            file,
-            staticPath,
-            plugin.options.resizeOptsFactory
-              ? plugin.options.resizeOptsFactory(size)
-              : { width: size.width, height: size.height, options: { position: size.crop || 'centre' } },
-            (collection.upload as IncomingUploadType).disableLocalStorage,
-          );
-          data.webp.sizes[size.name] = getMetadata(filename, bufferObject.info);
-        }
-      }
+      plugin.makeWebp(file, staticPath, collection, args.doc.id, args.req.payload);
     }
 
-    plugin.logger.log(`updating collection: ${collection.slug}, id: ${args.doc.id}`);
-
-    payload.findByID({ id: args.doc.id.toString(), collection: collection.slug }).then(() => {
-      payload
-        .update({
-          collection: collection.slug,
-          data,
-          id: args.doc.id,
-        })
-        .then();
-    });
     return args.doc;
   };
 
@@ -150,7 +111,6 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
     }
     if (plugin.options?.sync) {
       plugin.logger.log(`starting SYNC conversion`);
-
       return await convertImages(args);
     } else {
       plugin.logger.log(`starting ASYNC conversion`);
@@ -167,7 +127,7 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
         (collection.upload as IncomingUploadType).staticDir,
       );
 
-      const fileToDelete = `${staticPath}/${doc.webp.filename}`;
+      const fileToDelete = path.resolve(staticPath, doc.webp.filename);
 
       plugin.logger.log(`attempting to delete image: ${fileToDelete}`);
 
@@ -181,7 +141,7 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
 
       if (doc.webp.sizes) {
         Object.values(doc.webp.sizes).forEach(async (size: FileData) => {
-          const sizeToDelete = `${staticPath}/${size.filename}`;
+          const sizeToDelete = path.resolve(staticPath, size.filename);
           plugin.logger.log(`attempting to delete image size file: ${fileToDelete}`);
 
           if (await fileExists(sizeToDelete)) {

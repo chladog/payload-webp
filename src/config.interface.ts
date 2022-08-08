@@ -76,9 +76,9 @@ export interface WebpPluginOptions {
   /**
    * Filename conflict behavior. 
    * 
-   * When ```true``` the file will be overwritten. 
+   * When ```true``` the existing files will be overwritten. 
    * 
-   * When ```false``` ```+i``` will be appended to the filename.
+   * When ```false``` ```+i``` will be added to the filename.
    * 
    */
   overwrite?: boolean;
