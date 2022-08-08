@@ -187,12 +187,7 @@ export class WebpPlugin {
     };
   }
 
-  async regenerateCollectionLoop(
-    collectionSlug: string,
-    payload: Payload,
-    current: number,
-    sort?: string,
-  ) {
+  async regenerateCollectionLoop(collectionSlug: string, payload: Payload, current: number, sort?: string) {
     const find = await payload.find({
       collection: collectionSlug,
       sort: sort || 'createdAt',
