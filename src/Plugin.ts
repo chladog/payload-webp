@@ -272,7 +272,7 @@ export class WebpPlugin {
 
           resolve: async (root, args, context) => {
             const collections: Collection[] = Object.values(context.req.payload.collections);
-            const collection = collections.find((collection) => collection?.config?.slug === args.slug);
+            const collection = collections.find((item) => item?.config?.slug === args.slug);
             if (args.slug && (await executeAccess({ req: context.req }, collection.config.access.update))) {
               if (!this.regenerating.get(args.slug)) {
                 this.logger.log('Starting regeneration for ' + args.slug);
