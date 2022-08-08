@@ -11,6 +11,9 @@
 ```JS
 import webp from "payload-webp";
 
+// you may use this as fallback in your resizeOptsFactory
+import { defaultResizeFactory } from "payload-webp";
+
 export default buildConfig({
   ...
   plugins: [
