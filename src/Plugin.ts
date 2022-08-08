@@ -107,7 +107,7 @@ export class WebpPlugin {
     if ((collectionConfig.upload as IncomingUploadType).imageSizes) {
       for (const size of (collectionConfig.upload as IncomingUploadType).imageSizes) {
         this.logger.log(`converting image size: ${size.name}`);
-        const { filename } = await this.convert(
+        const convertedSize = await this.convert(
           file,
           staticPath,
           this.options.resizeOptsFactory
@@ -115,7 +115,7 @@ export class WebpPlugin {
             : { width: size.width, height: size.height, options: { position: size.crop || 'centre' } },
           (collectionConfig.upload as IncomingUploadType).disableLocalStorage,
         );
-        newFiledata.webp.sizes[size.name] = getMetadata(filename, bufferObject.info);
+        newFiledata.webp.sizes[size.name] = getMetadata(convertedSize.filenameExt, convertedSize.bufferObject.info);
       }
     }
 
