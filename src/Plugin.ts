@@ -11,6 +11,13 @@ import { File, IncomingUploadType } from 'payload/dist/uploads/types';
 import { Payload } from 'payload';
 import { CollectionConfig } from 'payload/types';
 import { Collection } from 'payload/dist/collections/config/types';
+import { PayloadRequest } from 'payload/dist/express/types';
+import { APIError } from 'payload/errors';
+
+interface BufferObject {
+  data: Buffer;
+  info: sharp.OutputInfo;
+}
 
 export class WebpPlugin {
   logger: Logger;
@@ -85,22 +92,23 @@ export class WebpPlugin {
     collectionConfig: CollectionConfig,
     docId: string | number,
     payload: Payload,
+    req: PayloadRequest,
   ): Promise<any> {
     let newFiledata: any = {};
     this.logger.log(`converting image`);
 
-    const { filenameExt, bufferObject } = await this.convert(
+    const converted = await this.convert(
       file,
       staticPath,
       this.options.maxResizeOpts,
       (collectionConfig.upload as IncomingUploadType).disableLocalStorage,
     );
 
-    if (!bufferObject) {
+    if (!converted) {
       return;
     }
     newFiledata = {
-      webp: getMetadata(filenameExt, bufferObject.info),
+      webp: getMetadata(converted.filenameExt, converted.bufferObject.info),
     };
     newFiledata.webp.sizes = {};
 
@@ -115,17 +123,27 @@ export class WebpPlugin {
             : { width: size.width, height: size.height, options: { position: size.crop || 'centre' } },
           (collectionConfig.upload as IncomingUploadType).disableLocalStorage,
         );
-        newFiledata.webp.sizes[size.name] = getMetadata(convertedSize.filenameExt, convertedSize.bufferObject.info);
+        if (convertedSize) {
+          newFiledata.webp.sizes[size.name] = getMetadata(convertedSize.filenameExt, convertedSize.bufferObject.info);
+        }
       }
     }
 
     this.logger.log(`updating collection: ${collectionConfig.slug}, id: ${docId}`);
-    await payload.update({
-      collection: collectionConfig.slug,
-      data: newFiledata,
-      id: docId,
-    });
-    return newFiledata;
+    try {
+      await payload.update({
+        locale: req.locale,
+        fallbackLocale: req.fallbackLocale,
+        collection: collectionConfig.slug,
+        data: newFiledata,
+        id: docId,
+        depth: 0,
+      });
+      return newFiledata;
+    } catch (e) {
+      this.logger.err(e.message);
+      return;
+    }
   }
 
   async convert(
@@ -133,33 +151,58 @@ export class WebpPlugin {
     staticPath: string,
     resize?: { width?: number; height?: number; options?: sharp.ResizeOptions },
     disableLocalStorage = false,
-  ) {
+  ): Promise<{
+    originalFile: File;
+    name: string;
+    bufferObject: BufferObject;
+    filename: string;
+    filenameExt: string;
+  } | null> {
     const converted = sharp(file.data);
     if (resize) {
       converted.resize(resize.width, resize.height, resize.options);
     }
     converted.webp(this.options.sharpWebpOptions).withMetadata();
-    const bufferObject = await converted.toBuffer({
-      resolveWithObject: true,
-    });
+    let bufferObject: BufferObject | null;
+    try {
+      bufferObject = await converted.toBuffer({
+        resolveWithObject: true,
+      });
+    } catch (e) {
+      this.logger.err(e.message);
+      bufferObject = null;
+    }
+
+    if (!bufferObject) {
+      return null;
+    }
+
     const name = file.name.substring(0, file.name.lastIndexOf('.'));
 
     const { filename, filenameExt, imagePath } = await this.assertFilename(name, bufferObject, staticPath);
 
     this.logger.log(`converted image: ${filenameExt}`);
 
-    if (!disableLocalStorage) {
-      await converted.toFile(imagePath);
-      this.logger.log(`saving image: ${imagePath}`);
-    }
-
-    return {
+    let resultObj = {
       originalFile: file,
       name,
       bufferObject,
       filename,
       filenameExt,
     };
+
+    if (!disableLocalStorage) {
+      try {
+        await converted.toFile(imagePath);
+        this.logger.log(`saving image: ${imagePath}`);
+        return resultObj;
+      } catch (e) {
+        this.logger.err(e.message);
+        return null;
+      }
+    }
+
+    return resultObj;
   }
 
   uploadCollectionsLookup() {
@@ -187,64 +230,78 @@ export class WebpPlugin {
     };
   }
 
-  async regenerateCollectionLoop(collectionSlug: string, payload: Payload, current: number, sort?: string) {
-    const find = await payload.find({
-      collection: collectionSlug,
-      sort: sort || 'createdAt',
-      pagination: true,
-      page: current,
-      limit: 1,
-    });
-    const data = find.docs[0];
-    const status = {
-      currentFile: find.docs[0].filename,
-      current: find.page,
-      total: find.totalPages,
-    };
-    this.regenerating.set(collectionSlug, status);
-    const collectionConfig: CollectionConfig = this.uploadCollections.find((item) => item.slug === collectionSlug);
+  async regenerateCollectionLoop(
+    collectionSlug: string,
+    payload: Payload,
+    current: number,
+    req: PayloadRequest,
+    sort?: string,
+  ) {
+    try {
+      const find = await payload.find({
+        locale: req.locale,
+        fallbackLocale: req.fallbackLocale,
+        collection: collectionSlug,
+        sort: sort || 'createdAt',
+        pagination: true,
+        page: current,
+        depth: 0,
+        limit: 1,
+      });
+      const data = find.docs[0];
+      const status = {
+        currentFile: find.docs[0].filename,
+        current: find.page,
+        total: find.totalPages,
+      };
+      this.regenerating.set(collectionSlug, status);
+      const collectionConfig: CollectionConfig = this.uploadCollections.find((item) => item.slug === collectionSlug);
 
-    // REGENERATE
-    const staticPath = path.resolve(
-      payload.config.paths.configDir,
-      (collectionConfig.upload as IncomingUploadType).staticDir,
-    );
-    const originalFilePath = path.resolve(staticPath, data.filename);
+      // REGENERATE
+      const staticPath = path.resolve(
+        payload.config.paths.configDir,
+        (collectionConfig.upload as IncomingUploadType).staticDir,
+      );
+      const originalFilePath = path.resolve(staticPath, data.filename);
 
-    await new Promise((resolve) =>
-      fs.readFile(originalFilePath, null, async (err, buffer) => {
-        if (err) {
-          this.logger.err('Error while trying to read original file: ' + data.filename + '; ' + err.message);
+      await new Promise((resolve) =>
+        fs.readFile(originalFilePath, null, async (err, buffer) => {
+          if (err) {
+            this.logger.err('Error while trying to read original file: ' + data.filename + '; ' + err.message);
+            return resolve(status);
+          }
+          await this.makeWebp(
+            {
+              data: buffer,
+              mimetype: data.mimeType,
+              name: data.filename,
+              size: data.filesize,
+            },
+            staticPath,
+            collectionConfig,
+            data.id,
+            payload,
+            req,
+          );
           return resolve(status);
-        }
-        await this.makeWebp(
-          {
-            data: buffer,
-            mimetype: data.mimeType,
-            name: data.filename,
-            size: data.filesize,
-          },
-          staticPath,
-          collectionConfig,
-          data.id,
-          payload,
-        );
-        return resolve(status);
-      }),
-    );
+        }),
+      );
 
-    // LOOP
-    if (status.current < status.total) {
-      if (current <= 1 || this.options.sync) {
-        this.regenerateCollectionLoop(collectionSlug, payload, current + 1, sort);
+      // LOOP
+      if (status.current < status.total) {
+        if (current <= 1 || this.options.sync) {
+          this.regenerateCollectionLoop(collectionSlug, payload, current + 1, req, sort);
+        } else {
+          await this.regenerateCollectionLoop(collectionSlug, payload, current + 1, req, sort);
+        }
       } else {
-        await this.regenerateCollectionLoop(collectionSlug, payload, current + 1, sort);
+        this.regenerating.delete(collectionSlug);
+        this.logger.log('Finished regenerating ' + collectionSlug);
       }
-    } else {
-      this.regenerating.delete(collectionSlug);
-      this.logger.log('Finished regenerating ' + collectionSlug);
+      return status;
+    } catch (e) {
+      throw new APIError(e.message, 500);
     }
-    return status;
   }
 
   regenerateResolver() {
@@ -282,7 +339,11 @@ export class WebpPlugin {
             if (args.slug && (await executeAccess({ req: context.req }, collection.config.access.update))) {
               if (!this.regenerating.get(args.slug)) {
                 this.logger.log('Starting regeneration for ' + args.slug);
-                return await this.regenerateCollectionLoop(args.slug, context.req.payload, 1, args.sort);
+                try {
+                  return await this.regenerateCollectionLoop(args.slug, context.req.payload, 1, context.req, args.sort);
+                } catch (e) {
+                  throw new APIError(e.message, 500);
+                }
               } else {
                 this.logger.log(
                   'Regeneration in progress for ' +

@@ -93,7 +93,7 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
     const { file } = args.req.files || {};
 
     if (file) {
-      plugin.makeWebp(file, staticPath, collection, args.doc.id, args.req.payload);
+      plugin.makeWebp(file, staticPath, collection, args.doc.id, args.req.payload, args.req);
     }
 
     return args.doc;
