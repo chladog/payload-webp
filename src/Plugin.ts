@@ -4,13 +4,13 @@ import { Config } from 'payload/config';
 import sharp from 'sharp';
 import { WebpPluginOptions } from './config.interface';
 import { Logger } from './logger';
-import { fileExists, getMetadata } from './utils';
+import { executeAccess, fileExists, getMetadata } from './utils';
 import WebpCollection from './WebpCollection';
 import fs from 'fs';
 import { File, IncomingUploadType } from 'payload/dist/uploads/types';
 import { Payload } from 'payload';
-import { PayloadRequest } from 'payload/dist/express/types';
 import { CollectionConfig } from 'payload/types';
+import { Collection } from 'payload/dist/collections/config/types';
 
 export class WebpPlugin {
   logger: Logger;
@@ -253,15 +253,17 @@ export class WebpPlugin {
         WebpRegenerate: {
           args: {
             slug: {
-              type: new GraphQL.GraphQLEnumType({
-                name: 'CollectionSlug',
-                values: Object.assign(
-                  {},
-                  ...this.uploadCollections.map((collection) => ({
-                    [collection.slug.replace(/-./g, (x) => x[1].toUpperCase())]: { value: collection.slug },
-                  })),
-                ),
-              }),
+              type: new GraphQL.GraphQLNonNull(
+                new GraphQL.GraphQLEnumType({
+                  name: 'CollectionSlug',
+                  values: Object.assign(
+                    {},
+                    ...this.uploadCollections.map((collection) => ({
+                      [collection.slug.replace(/-./g, (x) => x[1].toUpperCase())]: { value: collection.slug },
+                    })),
+                  ),
+                }),
+              ),
             },
             sort: {
               type: GraphQL.GraphQLString,
@@ -269,19 +271,25 @@ export class WebpPlugin {
           },
 
           resolve: async (root, args, context) => {
-            if (!this.regenerating.get(args.slug)) {
-              this.logger.log('Starting regeneration for ' + args.slug);
-              return await this.regenerateCollectionLoop(args.slug, context.req.payload, 1, args.sort);
+            const collections: Collection[] = Object.values(context.req.payload.collections);
+            const collection = collections.find((collection) => collection?.config?.slug === args.slug);
+            if (args.slug && (await executeAccess({ req: context.req }, collection.config.access.update))) {
+              if (!this.regenerating.get(args.slug)) {
+                this.logger.log('Starting regeneration for ' + args.slug);
+                return await this.regenerateCollectionLoop(args.slug, context.req.payload, 1, args.sort);
+              } else {
+                this.logger.log(
+                  'Regeneration in progress for ' +
+                    args.slug +
+                    ': ' +
+                    this.regenerating.get(args.slug).current +
+                    '/' +
+                    this.regenerating.get(args.slug).total,
+                );
+                return this.regenerating.get(args.slug);
+              }
             } else {
-              this.logger.log(
-                'Regeneration in progress for ' +
-                  args.slug +
-                  ': ' +
-                  this.regenerating.get(args.slug).current +
-                  '/' +
-                  this.regenerating.get(args.slug).total,
-              );
-              return this.regenerating.get(args.slug);
+              throw new Error('Access denied');
             }
           },
           type: new GraphQL.GraphQLObjectType({
