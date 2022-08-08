@@ -191,7 +191,6 @@ export class WebpPlugin {
     collectionSlug: string,
     payload: Payload,
     current: number,
-    req: PayloadRequest,
     sort?: string,
   ) {
     const find = await payload.find({
@@ -212,7 +211,7 @@ export class WebpPlugin {
 
     // REGENERATE
     const staticPath = path.resolve(
-      req.payload.config.paths.configDir,
+      payload.config.paths.configDir,
       (collectionConfig.upload as IncomingUploadType).staticDir,
     );
     const originalFilePath = path.resolve(staticPath, data.filename);
@@ -242,9 +241,9 @@ export class WebpPlugin {
     // LOOP
     if (status.current < status.total) {
       if (current <= 1 || this.options.sync) {
-        this.regenerateCollectionLoop(collectionSlug, payload, current + 1, req, sort);
+        this.regenerateCollectionLoop(collectionSlug, payload, current + 1, sort);
       } else {
-        await this.regenerateCollectionLoop(collectionSlug, payload, current + 1, req, sort);
+        await this.regenerateCollectionLoop(collectionSlug, payload, current + 1, sort);
       }
     } else {
       this.regenerating.delete(collectionSlug);
@@ -275,10 +274,9 @@ export class WebpPlugin {
           },
 
           resolve: async (root, args, context) => {
-            console.log(this.regenerating.get(args.slug));
             if (!this.regenerating.get(args.slug)) {
               this.logger.log('Starting regeneration for ' + args.slug);
-              return await this.regenerateCollectionLoop(args.slug, payload, 1, context.req, args.sort);
+              return await this.regenerateCollectionLoop(args.slug, context.req.payload, 1, args.sort);
             } else {
               this.logger.log(
                 'Regeneration in progress for ' +
