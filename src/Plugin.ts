@@ -248,8 +248,14 @@ export class WebpPlugin {
   }
 
   regenerateResolver() {
+    const incomingMutationsF = this.payloadConfig.graphQL.mutations;
     this.payloadConfig.graphQL.mutations = (GraphQL, payload) => {
+      let incomingMutations = {};
+      if (incomingMutationsF) {
+        incomingMutations = incomingMutationsF(GraphQL, payload);
+      }
       return {
+        ...incomingMutations,
         WebpRegenerate: {
           args: {
             slug: {
