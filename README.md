@@ -48,6 +48,38 @@ Optionally you can pass JSON with following plugin options to tweak compression 
 ```JS
 interface WebpPluginOptions {
   /**
+   * Function that takes current image size to be resized and returns a sharp resize options object.
+   * Can be used to modify particular image size sizing, cropping, fitting etc.
+   * 
+   * Example:
+```JS
+  resize: (imageSize) => {
+      // fit to contain if image size is xs
+      if (imageSize.name === 'xs') {
+        return {
+          width: imageSize.width,
+          height: imageSize.width,
+          options: {
+            fit: "contain"
+          }
+        }
+      }
+      // fallback to payload's default behavior
+      return defaultResizeFactory(imageSize);
+  }
+```*/
+  resizeOptsFactory?: (imageSize: ImageSize) => {
+    width: number;
+    height: number;
+    options?: sharp.ResizeOptions;
+  };
+
+  /**
+   *  If present the main webp image will be sized to the given dimensions.
+   */
+  maxResizeOpts?: { width?: number; height?: number; options?: sharp.ResizeOptions };
+
+  /**
    * Which mime types convert to webp.
    * Defaults to: ```["image/jpeg", "image/png", "image/webp"]```
    *
@@ -78,6 +110,21 @@ interface WebpPluginOptions {
    * By switching this flag the hook and following request response will await for the image conversion.
    */
   sync?: boolean;
+
+  /**
+   * When true log messages for debugging purposes.
+   */
+  debug?: boolean;
+
+  /**
+   * Filename conflict behavior.
+   *
+   * When ```true``` the existing files will be overwritten.
+   *
+   * When ```false``` ```+i``` will be added to the filename.
+   *
+   */
+  overwrite?: boolean;
 }
 ```
 ---
