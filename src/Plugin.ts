@@ -211,7 +211,6 @@ export class WebpPlugin {
     const collectionConfig: CollectionConfig = this.uploadCollections.find((item) => item.slug === collectionSlug);
 
     // REGENERATE
-    let newFiledata: any;
     const staticPath = path.resolve(
       req.payload.config.paths.configDir,
       (collectionConfig.upload as IncomingUploadType).staticDir,
@@ -224,7 +223,7 @@ export class WebpPlugin {
           this.logger.err('Error while trying to read original file: ' + data.filename + '; ' + err.message);
           return resolve(status);
         }
-        const { filename, filenameExt, bufferObject } = await this.makeWebp(
+        await this.makeWebp(
           {
             data: buffer,
             mimetype: data.mimeType,

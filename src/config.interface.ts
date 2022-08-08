@@ -74,12 +74,12 @@ export interface WebpPluginOptions {
   debug?: boolean;
 
   /**
-   * Filename conflict behavior. 
-   * 
-   * When ```true``` the existing files will be overwritten. 
-   * 
+   * Filename conflict behavior.
+   *
+   * When ```true``` the existing files will be overwritten.
+   *
    * When ```false``` ```+i``` will be added to the filename.
-   * 
+   *
    */
   overwrite?: boolean;
 }
