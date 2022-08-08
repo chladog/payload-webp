@@ -80,3 +80,26 @@ interface WebpPluginOptions {
   sync?: boolean;
 }
 ```
+---
+## Regenerate Webp images
+
+You can regenerate existing images with following GraphQL mutation:
+
+```JS
+mutation {
+  WebpRegenerate(slug: String!, sort: String) {
+    currentFile
+    current
+    total
+  }
+}
+```
+### Arguments
+First Header  | Second Header
+------------- | -------------
+slug  | Upload collection slug in camelCase
+sort  | You can pass the sort parameter to set the direction in which images will be regenerated. Default: ```createdAt```
+
+### Fields and subsequent calls
+You can use returned fields to show notify of current progress to user.
+Any subsequent call while regeneration of particular collection is in the progress **will not** start new regeneration process, but will return current progress.
