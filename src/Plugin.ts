@@ -183,7 +183,7 @@ export class WebpPlugin {
 
     this.logger.log(`converted image: ${filenameExt}`);
 
-    let resultObj = {
+    const resultObj = {
       originalFile: file,
       name,
       bufferObject,
