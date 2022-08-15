@@ -31,7 +31,7 @@ export class WebpPlugin {
   constructor(payloadConfig: Config, options: WebpPluginOptions) {
     // duplicate config
     this.payloadConfig = deepmerge({}, payloadConfig);
-    this.logger = new Logger(options.debug || false);
+    this.logger = new Logger(options?.debug || false);
 
     this.options = options;
     this.options.sharpWebpOptions = options?.sharpWebpOptions
