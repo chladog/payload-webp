@@ -153,3 +153,7 @@ sort  | You can pass the sort parameter to set the direction in which images wil
 ### Fields and subsequent calls
 You can use returned fields to show notify of current progress to user.
 Any subsequent call while regeneration of particular collection is in the progress **will not** start new regeneration process, but will return current progress.
+
+## Buffer objects
+You can access buffer objects of processed image and all image sizes from Express request object ```req.payloadWebp```. This way your adapter can store the files with external provider for an instance.
+The maximum resolution webp file is at ```req.payloadWebp.src```, other file sizes are at their respective name ```req.payloadWebp[imageSizeName]```.

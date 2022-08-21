@@ -110,6 +110,9 @@ export class WebpPlugin {
     newFiledata = {
       webp: getMetadata(converted.filenameExt, converted.bufferObject.info),
     };
+    req.payloadWebp = {
+      src: converted.bufferObject.data
+    };
     newFiledata.webp.sizes = {};
 
     if ((collectionConfig.upload as IncomingUploadType).imageSizes) {
@@ -125,6 +128,7 @@ export class WebpPlugin {
         );
         if (convertedSize) {
           newFiledata.webp.sizes[size.name] = getMetadata(convertedSize.filenameExt, convertedSize.bufferObject.info);
+          req.payloadWebp[size.name] = convertedSize.bufferObject.data;
         }
       }
     }
