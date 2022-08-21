@@ -33,7 +33,7 @@ export class WebpPlugin {
     this.payloadConfig = deepmerge({}, payloadConfig);
     this.logger = new Logger(options?.debug || false);
 
-    this.options = options;
+    this.options = options || {};
     this.options.sharpWebpOptions = options?.sharpWebpOptions
       ? options.sharpWebpOptions
       : {
@@ -305,8 +305,10 @@ export class WebpPlugin {
   }
 
   regenerateResolver() {
-    const incomingMutationsF = this.payloadConfig.graphQL.mutations;
-    this.payloadConfig.graphQL.mutations = (GraphQL, payload) => {
+    const incomingMutationsF = this.payloadConfig?.graphQL?.mutations
+      ? this.payloadConfig.graphQL.mutations
+      : undefined;
+    const newMutations = (GraphQL, payload) => {
       let incomingMutations = {};
       if (incomingMutationsF) {
         incomingMutations = incomingMutationsF(GraphQL, payload);
@@ -370,5 +372,9 @@ export class WebpPlugin {
         },
       };
     };
+    if (!this.payloadConfig.graphQL) {
+      this.payloadConfig.graphQL = {};
+    }
+    Object.assign(this.payloadConfig.graphQL, { mutations: newMutations });
   }
 }
