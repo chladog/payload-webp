@@ -111,7 +111,7 @@ export class WebpPlugin {
       webp: getMetadata(converted.filenameExt, converted.bufferObject.info),
     };
     req.payloadWebp = {
-      src: converted.bufferObject.data
+      src: converted.bufferObject.data,
     };
     newFiledata.webp.sizes = {};
 
