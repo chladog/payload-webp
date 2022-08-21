@@ -156,4 +156,4 @@ Any subsequent call while regeneration of particular collection is in the progre
 
 ## Buffer objects
 You can access buffer objects of processed image and all image sizes from Express request object ```req.payloadWebp```. This way your adapter can store the files with external provider for an instance.
-The maximum resolution webp file is at ```req.payloadWebp.src```, other file sizes are at their respective name ```req.payloadWebp[imageSizeName]```.
+The maximum resolution webp buffer is at ```req.payloadWebp.src```, other image sizes are at their respective name ```req.payloadWebp[imageSizeName]```.
