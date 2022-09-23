@@ -222,10 +222,10 @@ export class WebpPlugin {
   }
 
   webpackAlias() {
-    const incomingWebpackConfig = this.payloadConfig.admin.webpack;
     if (!this.payloadConfig.admin) {
       this.payloadConfig.admin = {};
     }
+    const incomingWebpackConfig = this.payloadConfig?.admin?.webpack;
     // mock plugin to avoid webpack errors in frontend
     this.payloadConfig.admin.webpack = (webpackConfig) => {
       webpackConfig.resolve.alias['payload-webp'] = path.resolve(__dirname, './mock-plugin');
