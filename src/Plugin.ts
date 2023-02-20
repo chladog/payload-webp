@@ -37,8 +37,8 @@ export class WebpPlugin {
     this.options.sharpWebpOptions = options?.sharpWebpOptions
       ? options.sharpWebpOptions
       : {
-        quality: 50,
-      };
+          quality: 50,
+        };
 
     this.webpackAlias();
 
@@ -212,8 +212,8 @@ export class WebpPlugin {
   uploadCollectionsLookup() {
     this.uploadCollections = this.options?.collections
       ? this.payloadConfig.collections.filter(
-        (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
-      )
+          (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
+        )
       : this.payloadConfig.collections.filter((collection) => !!collection.upload);
 
     this.logger.log('upload collections found: ' + this.uploadCollections.map((col) => col.slug).join(', '));
@@ -353,11 +353,11 @@ export class WebpPlugin {
               } else {
                 this.logger.log(
                   'Regeneration in progress for ' +
-                  args.slug +
-                  ': ' +
-                  this.regenerating.get(args.slug).current +
-                  '/' +
-                  this.regenerating.get(args.slug).total,
+                    args.slug +
+                    ': ' +
+                    this.regenerating.get(args.slug).current +
+                    '/' +
+                    this.regenerating.get(args.slug).total,
                 );
                 return this.regenerating.get(args.slug);
               }
