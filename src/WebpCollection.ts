@@ -11,8 +11,6 @@ import deepmerge from 'deepmerge';
 import { PayloadRequest } from 'payload/dist/express/types';
 
 export default (collection: CollectionConfig, plugin: WebpPlugin) => {
-
-
   collection.upload = typeof collection.upload === 'object' ? collection.upload : ({} as IncomingUploadType);
 
   const webpFields: Field = {
@@ -25,8 +23,9 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
     fields: [
       ...getFileMetadataFields(({ data }) => {
         if (data?.webp?.filename) {
-          return `${plugin.payloadConfig.serverURL || ''}${(collection.upload as IncomingUploadType).staticURL}/${data.webp.filename
-            }`;
+          return `${plugin.payloadConfig.serverURL || ''}${(collection.upload as IncomingUploadType).staticURL}/${
+            data.webp.filename
+          }`;
         }
 
         return undefined;
@@ -56,8 +55,9 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
             ...getFileMetadataFields(({ data }) => {
               const sizeFilename = data?.webp?.sizes?.[size.name]?.filename;
               if (sizeFilename) {
-                return `${plugin.payloadConfig.serverURL || ''}${(collection.upload as IncomingUploadType).staticURL
-                  }/${sizeFilename}`;
+                return `${plugin.payloadConfig.serverURL || ''}${
+                  (collection.upload as IncomingUploadType).staticURL
+                }/${sizeFilename}`;
               }
               return undefined;
             }),

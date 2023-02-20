@@ -87,7 +87,7 @@ export interface WebpPluginOptions {
    * Default: When ```false``` EXIF metadata will be removed in the output.
    *
    * When ```true``` EXIF metadata will be kept in the output.
-   * 
+   *
    * _```orientation``` tag will be striped in either case as the image will be rotated based on its value during processing._
    */
   metadata?: boolean;

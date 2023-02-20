@@ -38,8 +38,8 @@ export class WebpPlugin {
     this.options.sharpWebpOptions = options?.sharpWebpOptions
       ? options.sharpWebpOptions
       : {
-        quality: 50,
-      };
+          quality: 50,
+        };
 
     this.webpackAlias();
 
@@ -220,8 +220,8 @@ export class WebpPlugin {
   uploadCollectionsLookup() {
     this.uploadCollections = this.options?.collections
       ? this.payloadConfig.collections.filter(
-        (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
-      )
+          (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
+        )
       : this.payloadConfig.collections.filter((collection) => !!collection.upload);
 
     this.logger.log('upload collections found: ' + this.uploadCollections.map((col) => col.slug).join(', '));
@@ -242,14 +242,22 @@ export class WebpPlugin {
     };
   }
 
-  async regenerateImage(incoming: string | { id: string, mimeType: string, filename: string, filesize: string }, payload: Payload, collectionConfig: CollectionConfig, req: PayloadRequest) {
-    const data = typeof incoming === 'object' ? incoming : await payload.findByID({
-      id: incoming,
-      locale: req.locale,
-      fallbackLocale: req.fallbackLocale,
-      collection: collectionConfig.slug,
-      depth: 0,
-    });
+  async regenerateImage(
+    incoming: string | { id: string; mimeType: string; filename: string; filesize: string },
+    payload: Payload,
+    collectionConfig: CollectionConfig,
+    req: PayloadRequest,
+  ) {
+    const data =
+      typeof incoming === 'object'
+        ? incoming
+        : await payload.findByID({
+            id: incoming,
+            locale: req.locale,
+            fallbackLocale: req.fallbackLocale,
+            collection: collectionConfig.slug,
+            depth: 0,
+          });
 
     // REGENERATE
     const staticPath = path.resolve(
@@ -334,7 +342,6 @@ export class WebpPlugin {
       ? this.payloadConfig.graphQL.mutations
       : undefined;
     const newMutations = (gql: typeof GraphQL, payload: Payload) => {
-
       let incomingMutations = {};
       if (incomingMutationsF) {
         incomingMutations = incomingMutationsF(gql, payload);
@@ -354,9 +361,7 @@ export class WebpPlugin {
         WebpRegenerate: {
           args: {
             slug: {
-              type: new gql.GraphQLNonNull(
-                collectionSlugType
-              ),
+              type: new gql.GraphQLNonNull(collectionSlugType),
             },
             sort: {
               type: gql.GraphQLString,
@@ -376,11 +381,11 @@ export class WebpPlugin {
               } else {
                 this.logger.log(
                   'Regeneration in progress for ' +
-                  args.slug +
-                  ': ' +
-                  this.regenerating.get(args.slug).current +
-                  '/' +
-                  this.regenerating.get(args.slug).total,
+                    args.slug +
+                    ': ' +
+                    this.regenerating.get(args.slug).current +
+                    '/' +
+                    this.regenerating.get(args.slug).total,
                 );
                 return this.regenerating.get(args.slug);
               }
@@ -401,9 +406,7 @@ export class WebpPlugin {
         WebpRegenerateSingle: {
           args: {
             slug: {
-              type: new gql.GraphQLNonNull(
-                collectionSlugType
-              ),
+              type: new gql.GraphQLNonNull(collectionSlugType),
             },
             id: {
               type: new gql.GraphQLNonNull(gql.GraphQLString),
@@ -424,7 +427,7 @@ export class WebpPlugin {
               throw new Error('Access denied');
             }
           },
-          type: gql.GraphQLBoolean
+          type: gql.GraphQLBoolean,
         },
       };
     };
