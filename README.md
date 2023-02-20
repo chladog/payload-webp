@@ -12,12 +12,12 @@
   }
 ```
 
+\*_PayloadCMS' **sharp** dependency version is often behind. This is a problem since sharp does not work with multiple versions in a single project and old versions are also a security risk. Solution is setting the wanted sharp version in `resolutions` field._
+
 2. Install the package with
    `npm i payload-webp` OR `yarn add payload-webp`
 
 3. Import the plugin to your `payload.config.ts`:
-
-\*_PayloadCMS' **sharp** dependency version is often behind. This is a problem since sharp does not work with multiple versions in a single project as well as security risk. Solution is setting the wanted sharp version in `resolution` field._
 
 ```JS
 import webp from "payload-webp";
@@ -33,7 +33,7 @@ export default buildConfig({
 )};
 ```
 
-3. After uploading images to your upload-enabled collection new field called webp is added with converted image => webp file meteadata and its sizes.
+4. After uploading images to your upload-enabled collection new field called webp is added with converted image => webp file meteadata and its sizes.
    Access webp field with graphql like so:
 
 ```YAML
