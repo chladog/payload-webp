@@ -13,6 +13,7 @@ import { CollectionConfig } from 'payload/types';
 import { Collection } from 'payload/dist/collections/config/types';
 import { PayloadRequest } from 'payload/dist/express/types';
 import { APIError } from 'payload/errors';
+import GraphQL from 'graphql';
 
 interface BufferObject {
   data: Buffer;
@@ -37,8 +38,8 @@ export class WebpPlugin {
     this.options.sharpWebpOptions = options?.sharpWebpOptions
       ? options.sharpWebpOptions
       : {
-          quality: 50,
-        };
+        quality: 50,
+      };
 
     this.webpackAlias();
 
@@ -162,7 +163,14 @@ export class WebpPlugin {
     filename: string;
     filenameExt: string;
   } | null> {
-    const converted = sharp(file.data).withMetadata();
+    const converted = sharp(file.data);
+
+    converted.rotate();
+
+    if (this.options.metadata === true) {
+      converted.withMetadata();
+    }
+
     if (resize) {
       converted.resize(resize.width, resize.height, resize.options);
     }
@@ -212,8 +220,8 @@ export class WebpPlugin {
   uploadCollectionsLookup() {
     this.uploadCollections = this.options?.collections
       ? this.payloadConfig.collections.filter(
-          (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
-        )
+        (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
+      )
       : this.payloadConfig.collections.filter((collection) => !!collection.upload);
 
     this.logger.log('upload collections found: ' + this.uploadCollections.map((col) => col.slug).join(', '));
@@ -232,6 +240,46 @@ export class WebpPlugin {
       // call incoming webpack function as well
       return incomingWebpackConfig ? incomingWebpackConfig(webpackConfig) : webpackConfig;
     };
+  }
+
+  async regenerateImage(incoming: string | { id: string, mimeType: string, filename: string, filesize: string }, payload: Payload, collectionConfig: CollectionConfig, req: PayloadRequest) {
+    const data = typeof incoming === 'object' ? incoming : await payload.findByID({
+      id: incoming,
+      locale: req.locale,
+      fallbackLocale: req.fallbackLocale,
+      collection: collectionConfig.slug,
+      depth: 0,
+    });
+
+    // REGENERATE
+    const staticPath = path.resolve(
+      payload.config.paths.configDir,
+      (collectionConfig.upload as IncomingUploadType).staticDir,
+    );
+    const originalFilePath = path.resolve(staticPath, data.filename);
+
+    return await new Promise((resolve) =>
+      fs.readFile(originalFilePath, null, async (err, buffer) => {
+        if (err) {
+          this.logger.err('Error while trying to read original file: ' + data.filename + '; ' + err.message);
+          return resolve(false);
+        }
+        await this.makeWebp(
+          {
+            data: buffer,
+            mimetype: data.mimeType,
+            name: data.filename,
+            size: data.filesize,
+          },
+          staticPath,
+          collectionConfig,
+          data.id,
+          payload,
+          req,
+        );
+        return resolve(true);
+      }),
+    );
   }
 
   async regenerateCollectionLoop(
@@ -262,34 +310,7 @@ export class WebpPlugin {
       const collectionConfig: CollectionConfig = this.uploadCollections.find((item) => item.slug === collectionSlug);
 
       // REGENERATE
-      const staticPath = path.resolve(
-        payload.config.paths.configDir,
-        (collectionConfig.upload as IncomingUploadType).staticDir,
-      );
-      const originalFilePath = path.resolve(staticPath, data.filename);
-
-      await new Promise((resolve) =>
-        fs.readFile(originalFilePath, null, async (err, buffer) => {
-          if (err) {
-            this.logger.err('Error while trying to read original file: ' + data.filename + '; ' + err.message);
-            return resolve(status);
-          }
-          await this.makeWebp(
-            {
-              data: buffer,
-              mimetype: data.mimeType,
-              name: data.filename,
-              size: data.filesize,
-            },
-            staticPath,
-            collectionConfig,
-            data.id,
-            payload,
-            req,
-          );
-          return resolve(status);
-        }),
-      );
+      await this.regenerateImage(data, payload, collectionConfig, req);
 
       // LOOP
       if (status.current < status.total) {
@@ -312,33 +333,35 @@ export class WebpPlugin {
     const incomingMutationsF = this.payloadConfig?.graphQL?.mutations
       ? this.payloadConfig.graphQL.mutations
       : undefined;
-    const newMutations = (GraphQL, payload) => {
+    const newMutations = (gql: typeof GraphQL, payload: Payload) => {
+
       let incomingMutations = {};
       if (incomingMutationsF) {
-        incomingMutations = incomingMutationsF(GraphQL, payload);
+        incomingMutations = incomingMutationsF(gql, payload);
       }
+
+      const collectionSlugType = new gql.GraphQLEnumType({
+        name: 'CollectionSlug',
+        values: Object.assign(
+          {},
+          ...this.uploadCollections.map((collection) => ({
+            [collection.slug.replace(/-./g, (x) => x[1].toUpperCase())]: { value: collection.slug },
+          })),
+        ),
+      });
       return {
         ...incomingMutations,
         WebpRegenerate: {
           args: {
             slug: {
-              type: new GraphQL.GraphQLNonNull(
-                new GraphQL.GraphQLEnumType({
-                  name: 'CollectionSlug',
-                  values: Object.assign(
-                    {},
-                    ...this.uploadCollections.map((collection) => ({
-                      [collection.slug.replace(/-./g, (x) => x[1].toUpperCase())]: { value: collection.slug },
-                    })),
-                  ),
-                }),
+              type: new gql.GraphQLNonNull(
+                collectionSlugType
               ),
             },
             sort: {
-              type: GraphQL.GraphQLString,
+              type: gql.GraphQLString,
             },
           },
-
           resolve: async (root, args, context) => {
             const collections: Collection[] = Object.values(context.req.payload.collections);
             const collection = collections.find((item) => item?.config?.slug === args.slug);
@@ -353,11 +376,11 @@ export class WebpPlugin {
               } else {
                 this.logger.log(
                   'Regeneration in progress for ' +
-                    args.slug +
-                    ': ' +
-                    this.regenerating.get(args.slug).current +
-                    '/' +
-                    this.regenerating.get(args.slug).total,
+                  args.slug +
+                  ': ' +
+                  this.regenerating.get(args.slug).current +
+                  '/' +
+                  this.regenerating.get(args.slug).total,
                 );
                 return this.regenerating.get(args.slug);
               }
@@ -365,14 +388,43 @@ export class WebpPlugin {
               throw new Error('Access denied');
             }
           },
-          type: new GraphQL.GraphQLObjectType({
+          type: new gql.GraphQLObjectType({
             name: 'WebpRegenerateStatus',
             fields: {
-              currentFile: { type: GraphQL.GraphQLString },
-              current: { type: GraphQL.GraphQLInt },
-              total: { type: GraphQL.GraphQLInt },
+              currentFile: { type: gql.GraphQLString },
+              current: { type: gql.GraphQLInt },
+              total: { type: gql.GraphQLInt },
             },
           }),
+        },
+
+        WebpRegenerateSingle: {
+          args: {
+            slug: {
+              type: new gql.GraphQLNonNull(
+                collectionSlugType
+              ),
+            },
+            id: {
+              type: new gql.GraphQLNonNull(gql.GraphQLString),
+            },
+          },
+
+          resolve: async (root, args, context) => {
+            const collections: Collection[] = Object.values(context.req.payload.collections);
+            const collection = collections.find((item) => item?.config?.slug === args.slug);
+            if (args.slug && (await executeAccess({ req: context.req }, collection.config.access.update))) {
+              this.logger.log('Starting regeneration for ' + args.slug + '/' + args.id);
+              try {
+                return await this.regenerateImage(args.id, context.req.payload, collection.config, context.req);
+              } catch (e) {
+                throw new APIError(e.message, 500);
+              }
+            } else {
+              throw new Error('Access denied');
+            }
+          },
+          type: gql.GraphQLBoolean
         },
       };
     };
