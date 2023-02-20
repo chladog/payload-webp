@@ -19,7 +19,6 @@ const stat = promisify(fs.stat);
 export const fileExists = async (filename: string): Promise<boolean> => {
   try {
     await stat(filename);
-
     return true;
   } catch (err) {
     return false;
