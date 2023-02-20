@@ -44,7 +44,7 @@
     "payload": "^1.6.13"
   },
   "dependencies": {
-    "chalk": "5.2.0",
+    "chalk": "^4",
     "deepmerge": "^4.3.0",
     "sharp": "0.31.3"
   }
