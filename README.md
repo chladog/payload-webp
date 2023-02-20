@@ -1,12 +1,23 @@
 # payload-webp
-**payloadcms/payload** plugin for automatic image conversion to **webp** format.
 
+**payloadcms/payload** plugin for automatic image conversion to **webp** format.
 
 ## Getting started
 
-1. Install the package with
-```npm i payload-webp``` OR ```yarn add payload-webp```
-2. Import the plugin to your ```payload.config.ts```:
+1. Add `sharp` to `resolutions` field in `package.json` to prevent versions mismatch\*:
+
+```JSON
+  "resolutions": {
+    "sharp": "latest"
+  }
+```
+
+2. Install the package with
+   `npm i payload-webp` OR `yarn add payload-webp`
+
+3. Import the plugin to your `payload.config.ts`:
+
+\*_PayloadCMS' **sharp** dependency version is often behind. This is a problem since sharp does not work with multiple versions in a single project as well as security risk. Solution is setting the wanted sharp version in `resolution` field._
 
 ```JS
 import webp from "payload-webp";
@@ -21,8 +32,10 @@ export default buildConfig({
   ]
 )};
 ```
-3. After uploading images to your upload-enabled collection new field called webp is added with converted image => webp file meteadata and its sizes. 
-Access webp field with graphql like so:
+
+3. After uploading images to your upload-enabled collection new field called webp is added with converted image => webp file meteadata and its sizes.
+   Access webp field with graphql like so:
+
 ```YAML
 query {
   allMedia {
@@ -44,16 +57,19 @@ query {
   }
 }
 ```
+
 By default webp images are being processed to reduce their filesize as well.
 
 ## Plugin options
+
 Optionally you can pass JSON with following plugin options to tweak compression or limit conversion to particular mimeTypes or specific upload-enabled collections.
-```JS
+
+````JS
 interface WebpPluginOptions {
   /**
    * Function that takes current image size to be resized and returns a sharp resize options object.
    * Can be used to modify particular image size sizing, cropping, fitting etc.
-   * 
+   *
    * Example:
 ```JS
   resize: (imageSize) => {
@@ -129,8 +145,10 @@ interface WebpPluginOptions {
    */
   overwrite?: boolean;
 }
-```
+````
+
 ---
+
 ## Regenerate Webp images
 
 You can regenerate existing images with following GraphQL mutation:
@@ -144,16 +162,20 @@ mutation {
   }
 }
 ```
+
 ### Arguments
-Argument  | Description
-------------- | -------------
-slug  | Upload collection slug in camelCase
-sort  | You can pass the sort parameter to set the direction in which images will be regenerated. Default: ```createdAt```
+
+| Argument | Description                                                                                                    |
+| -------- | -------------------------------------------------------------------------------------------------------------- |
+| slug     | Upload collection slug in camelCase                                                                            |
+| sort     | You can pass the sort parameter to set the direction in which images will be regenerated. Default: `createdAt` |
 
 ### Fields and subsequent calls
+
 You can use returned fields to show notify of current progress to user.
 Any subsequent call while regeneration of particular collection is in the progress **will not** start new regeneration process, but will return current progress.
 
 ## Buffer objects
-You can access buffer objects of processed image and all image sizes from Express request object ```req.payloadWebp```. This way your adapter can store the files with external provider for an instance.
-The maximum resolution webp buffer is at ```req.payloadWebp.src```, other image sizes are at their respective name ```req.payloadWebp[imageSizeName]```.
+
+You can access buffer objects of processed image and all image sizes from Express request object `req.payloadWebp`. This way your adapter can store the files with external provider for an instance.
+The maximum resolution webp buffer is at `req.payloadWebp.src`, other image sizes are at their respective name `req.payloadWebp[imageSizeName]`.
