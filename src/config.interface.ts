@@ -10,13 +10,13 @@ export interface WebpPluginOptions {
    * Example:
 ```JS
   resize: (imageSize) => {
-      // fit to contain if image size is xs
+      // fit to preserve aspect ratio if image size is xs
       if (imageSize.name === 'xs') {
         return {
           width: imageSize.width,
           height: imageSize.width,
           options: {
-            fit: "contain"
+            fit: "inside"
           }
         }
       }
