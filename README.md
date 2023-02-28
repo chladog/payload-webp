@@ -1,5 +1,12 @@
 # payload-webp
 
+[![NPM Version][npm-image]][npm-url]
+[![Download Count][download-url]][npm-url]
+
+[npm-image]: https://img.shields.io/npm/v/payload-webp.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/payload-webp
+[download-url]: https://img.shields.io/npm/dt/payload-webp.svg?style=flat-square
+
 **payloadcms/payload** plugin for automatic image conversion to **webp** format.
 
 ## Getting started
