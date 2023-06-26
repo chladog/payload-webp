@@ -10,7 +10,10 @@ export interface ImageFields {
 }
 
 const getFileMetadataFields: (afterReadHook: FieldHook) => Field[] = (afterReadHook) => [
-  { name: 'filename', type: 'text', unique: true },
+  {
+    name: 'filename',
+    type: 'text'
+  },
   {
     name: 'filesize',
     label: 'File Size',
