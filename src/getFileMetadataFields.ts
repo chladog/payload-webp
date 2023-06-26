@@ -12,7 +12,7 @@ export interface ImageFields {
 const getFileMetadataFields: (afterReadHook: FieldHook) => Field[] = (afterReadHook) => [
   {
     name: 'filename',
-    type: 'text'
+    type: 'text',
   },
   {
     name: 'filesize',
