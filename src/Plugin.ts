@@ -14,11 +14,7 @@ import { Collection } from 'payload/dist/collections/config/types';
 import { PayloadRequest } from 'payload/dist/express/types';
 import { APIError } from 'payload/errors';
 import GraphQL from 'graphql';
-
-interface BufferObject {
-  data: Buffer;
-  info: sharp.OutputInfo;
-}
+import { BufferObject, ResultObject } from './webp.interface';
 
 export class WebpPlugin {
   logger: Logger;
@@ -38,8 +34,8 @@ export class WebpPlugin {
     this.options.sharpWebpOptions = options?.sharpWebpOptions
       ? options.sharpWebpOptions
       : {
-          quality: 50,
-        };
+        quality: 50,
+      };
 
     this.webpackAlias();
 
@@ -156,13 +152,7 @@ export class WebpPlugin {
     staticPath: string,
     resize?: { width?: number; height?: number; options?: sharp.ResizeOptions },
     disableLocalStorage = false,
-  ): Promise<{
-    originalFile: File;
-    name: string;
-    bufferObject: BufferObject;
-    filename: string;
-    filenameExt: string;
-  } | null> {
+  ): Promise<ResultObject | null> {
     const converted = sharp(file.data);
 
     converted.rotate();
@@ -195,7 +185,7 @@ export class WebpPlugin {
 
     this.logger.log(`converted image: ${filenameExt}`);
 
-    const resultObj = {
+    const resultObj: ResultObject = {
       originalFile: file,
       name,
       bufferObject,
@@ -203,10 +193,17 @@ export class WebpPlugin {
       filenameExt,
     };
 
+    if (this.options.hooks.afterConversion) {
+      this.options.hooks.afterConversion(resultObj);
+    }
+
     if (!disableLocalStorage) {
       try {
         await converted.toFile(imagePath);
         this.logger.log(`saving image: ${imagePath}`);
+        if (this.options.hooks.afterStorage) {
+          this.options.hooks.afterStorage(resultObj);
+        }
         return resultObj;
       } catch (e) {
         this.logger.err(e.message);
@@ -220,8 +217,8 @@ export class WebpPlugin {
   uploadCollectionsLookup() {
     this.uploadCollections = this.options?.collections
       ? this.payloadConfig.collections.filter(
-          (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
-        )
+        (collection) => this.options.collections.includes(collection.slug) && !!collection.upload,
+      )
       : this.payloadConfig.collections.filter((collection) => !!collection.upload);
 
     this.logger.log('upload collections found: ' + this.uploadCollections.map((col) => col.slug).join(', '));
@@ -252,12 +249,12 @@ export class WebpPlugin {
       typeof incoming === 'object'
         ? incoming
         : await payload.findByID({
-            id: incoming,
-            locale: req.locale,
-            fallbackLocale: req.fallbackLocale,
-            collection: collectionConfig.slug,
-            depth: 0,
-          });
+          id: incoming,
+          locale: req.locale,
+          fallbackLocale: req.fallbackLocale,
+          collection: collectionConfig.slug,
+          depth: 0,
+        });
 
     // REGENERATE
     const staticPath = path.resolve(
@@ -381,11 +378,11 @@ export class WebpPlugin {
               } else {
                 this.logger.log(
                   'Regeneration in progress for ' +
-                    args.slug +
-                    ': ' +
-                    this.regenerating.get(args.slug).current +
-                    '/' +
-                    this.regenerating.get(args.slug).total,
+                  args.slug +
+                  ': ' +
+                  this.regenerating.get(args.slug).current +
+                  '/' +
+                  this.regenerating.get(args.slug).total,
                 );
                 return this.regenerating.get(args.slug);
               }

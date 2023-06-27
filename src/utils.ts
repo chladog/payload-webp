@@ -3,6 +3,7 @@ import sharp from 'sharp';
 import fs from 'fs';
 import { Access, AccessResult } from 'payload/config';
 import { Forbidden } from 'payload/errors';
+import { AfterReadHook } from 'payload/dist/collections/config/types';
 
 export const getMetadata = (filenameWExt: string, info: sharp.OutputInfo) => {
   return {
@@ -43,3 +44,14 @@ export const executeAccess = async (operation, access: Access): Promise<AccessRe
   if (!operation.disableErrors) throw new Forbidden();
   return false;
 };
+
+
+export const afterReadUrlHook: (filename: string | undefined, staticURL: string, serverURL?: string) => AfterReadHook = (filename, staticURL, serverURL) => (args) => {
+  if (filename) {
+    if (staticURL.startsWith('/')) {
+      return `${serverURL || '/'}${staticURL}/${filename}`;
+    }
+    return `${staticURL}/${filename}`;
+  }
+  return undefined;
+}

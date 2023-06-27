@@ -5,7 +5,7 @@ import { ErrorDeletingFile } from 'payload/errors';
 import { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionConfig, Field } from 'payload/types';
 import getFileMetadataFields, { ImageFields } from './getFileMetadataFields';
 import { WebpPlugin } from './Plugin';
-import { fileExists } from './utils';
+import { afterReadUrlHook, fileExists } from './utils';
 import fs from 'fs';
 import deepmerge from 'deepmerge';
 import { PayloadRequest } from 'payload/dist/express/types';
@@ -21,15 +21,9 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
       disabled: true,
     },
     fields: [
-      ...getFileMetadataFields(({ data }) => {
-        if (data?.webp?.filename) {
-          return `${plugin.payloadConfig.serverURL || ''}${(collection.upload as IncomingUploadType).staticURL}/${
-            data.webp.filename
-          }`;
-        }
-
-        return undefined;
-      }),
+      ...getFileMetadataFields(
+        ({ data }) => afterReadUrlHook(data?.webp?.filename, (collection.upload as IncomingUploadType).staticURL || collection.slug, plugin.payloadConfig.serverURL)
+      )
     ],
   };
 
@@ -52,15 +46,9 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
             disabled: true,
           },
           fields: [
-            ...getFileMetadataFields(({ data }) => {
-              const sizeFilename = data?.webp?.sizes?.[size.name]?.filename;
-              if (sizeFilename) {
-                return `${plugin.payloadConfig.serverURL || ''}${
-                  (collection.upload as IncomingUploadType).staticURL
-                }/${sizeFilename}`;
-              }
-              return undefined;
-            }),
+            ...getFileMetadataFields(
+              ({ data }) => afterReadUrlHook(data?.webp?.sizes?.[size.name]?.filename, (collection.upload as IncomingUploadType).staticURL || collection.slug, plugin.payloadConfig.serverURL)
+            )
           ],
         })) || [],
       admin: {

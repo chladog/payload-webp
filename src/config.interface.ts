@@ -1,6 +1,7 @@
 import { ImageSize } from 'payload/dist/uploads/types';
 import { CollectionConfig } from 'payload/types';
 import sharp from 'sharp';
+import { ResultObject } from './webp.interface';
 
 export interface WebpPluginOptions {
   /**
@@ -91,4 +92,21 @@ export interface WebpPluginOptions {
    * _```orientation``` tag will be striped in either case as the image will be rotated based on its value during processing._
    */
   metadata?: boolean;
+
+
+  /**
+   * Hooks that will run at their specific location.   * 
+   */
+  hooks?: {
+    /**
+     * This hook is run immediatelly after image conversion. The converted image files are in memory in ```bufferObject``` property.
+     * You can use this hook to store the files in the cloud.
+     */
+    afterConversion: (result: ResultObject) => any,
+    /**
+     * This hook is run immediatelly after storing files successfully. The converted image files are still in the memory in ```bufferObject``` property.
+     * You can use this hook to run post-processing on the stored files.
+     */
+    afterStorage: (result: ResultObject) => any
+  }
 }
