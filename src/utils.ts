@@ -45,13 +45,13 @@ export const executeAccess = async (operation, access: Access): Promise<AccessRe
   return false;
 };
 
-
-export const afterReadUrlHook: (filename: string | undefined, staticURL: string, serverURL?: string) => AfterReadHook = (filename, staticURL, serverURL) => (args) => {
-  if (filename) {
-    if (staticURL.startsWith('/')) {
-      return `${serverURL || '/'}${staticURL}/${filename}`;
+export const afterReadUrlHook: (filename: string | undefined, staticURL: string, serverURL?: string) => AfterReadHook =
+  (filename, staticURL, serverURL) => (args) => {
+    if (filename) {
+      if (staticURL.startsWith('/')) {
+        return `${serverURL || '/'}${staticURL}/${filename}`;
+      }
+      return `${staticURL}/${filename}`;
     }
-    return `${staticURL}/${filename}`;
-  }
-  return undefined;
-}
+    return undefined;
+  };

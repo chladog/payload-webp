@@ -93,20 +93,19 @@ export interface WebpPluginOptions {
    */
   metadata?: boolean;
 
-
   /**
-   * Hooks that will run at their specific location.   * 
+   * Hooks that will run at their specific location.   *
    */
   hooks?: {
     /**
      * This hook is run immediatelly after image conversion. The converted image files are in memory in ```bufferObject``` property.
      * You can use this hook to store the files in the cloud.
      */
-    afterConversion: (result: ResultObject) => any,
+    afterConversion: (result: ResultObject) => any;
     /**
      * This hook is run immediatelly after storing files successfully. The converted image files are still in the memory in ```bufferObject``` property.
      * You can use this hook to run post-processing on the stored files.
      */
-    afterStorage: (result: ResultObject) => any
-  }
+    afterStorage: (result: ResultObject) => any;
+  };
 }

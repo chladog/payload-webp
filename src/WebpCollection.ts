@@ -21,9 +21,13 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
       disabled: true,
     },
     fields: [
-      ...getFileMetadataFields(
-        ({ data }) => afterReadUrlHook(data?.webp?.filename, (collection.upload as IncomingUploadType).staticURL || collection.slug, plugin.payloadConfig.serverURL)
-      )
+      ...getFileMetadataFields(({ data }) =>
+        afterReadUrlHook(
+          data?.webp?.filename,
+          (collection.upload as IncomingUploadType).staticURL || collection.slug,
+          plugin.payloadConfig.serverURL,
+        ),
+      ),
     ],
   };
 
@@ -46,9 +50,13 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
             disabled: true,
           },
           fields: [
-            ...getFileMetadataFields(
-              ({ data }) => afterReadUrlHook(data?.webp?.sizes?.[size.name]?.filename, (collection.upload as IncomingUploadType).staticURL || collection.slug, plugin.payloadConfig.serverURL)
-            )
+            ...getFileMetadataFields(({ data }) =>
+              afterReadUrlHook(
+                data?.webp?.sizes?.[size.name]?.filename,
+                (collection.upload as IncomingUploadType).staticURL || collection.slug,
+                plugin.payloadConfig.serverURL,
+              ),
+            ),
           ],
         })) || [],
       admin: {
