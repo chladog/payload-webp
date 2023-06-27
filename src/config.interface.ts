@@ -94,7 +94,7 @@ export interface WebpPluginOptions {
   metadata?: boolean;
 
   /**
-   * Hooks that will run at their specific location.   *
+   * Hooks that run for each file at specific processing step.
    */
   hooks?: {
     /**

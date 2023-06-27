@@ -159,6 +159,22 @@ interface WebpPluginOptions {
  * _```orientation``` tag will be striped in either case as the image will be rotated based on its value during processing._
  */
   metadata?: boolean;
+
+    /**
+   * Hooks that run for each file at specific processing step.
+   */
+  hooks?: {
+    /**
+     * This hook is run immediatelly after image conversion. The converted image file is in memory in ```bufferObject``` property.
+     * You can use this hook to store the files in the cloud.
+     */
+    afterConversion?: (result: ResultObject) => any;
+    /**
+     * This hook is run immediatelly after storing files successfully. The converted image file is still in the memory in ```bufferObject``` property.
+     * You can use this hook to run post-processing on the stored file.
+     */
+    afterStorage?: (result: ResultObject) => any;
+  };
 }
 ````
 
@@ -192,6 +208,4 @@ Any subsequent call while regeneration of particular collection is in the progre
 
 ## Buffer objects
 
-~~You can access buffer objects of processed image and all image sizes from Express request object `req.payloadWebp`. This way your adapter can store the files with external provider for an instance.
-The maximum resolution webp buffer is at `req.payloadWebp.src`, other image sizes are at their respective name `req.payloadWebp[imageSizeName]`.~~
-__currently unavailable due race conditions__
+You can access each buffer object of processed image in ```hooks``` that you can set by Plugin Options. This way your adapter can store the files with external provider for an instance.
