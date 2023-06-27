@@ -50,13 +50,12 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
             disabled: true,
           },
           fields: [
-            ...getFileMetadataFields(
-              ({ data }) =>
-                afterReadUrlHookAction(
-                  data?.webp?.sizes?.[size.name]?.filename,
-                  (collection.upload as IncomingUploadType).staticURL || collection.slug,
-                  plugin.payloadConfig.serverURL,
-                ),
+            ...getFileMetadataFields(({ data }) =>
+              afterReadUrlHookAction(
+                data?.webp?.sizes?.[size.name]?.filename,
+                (collection.upload as IncomingUploadType).staticURL || collection.slug,
+                plugin.payloadConfig.serverURL,
+              ),
             ),
           ],
         })) || [],
