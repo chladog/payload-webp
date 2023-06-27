@@ -24,7 +24,7 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
       ...getFileMetadataFields(({ data }) =>
         afterReadUrlHookAction(
           data?.webp?.filename,
-          (collection.upload as IncomingUploadType).staticURL || collection.slug,
+          (collection.upload as IncomingUploadType).staticURL || ('/' + collection.slug),
           plugin.payloadConfig.serverURL,
         ),
       ),
@@ -53,7 +53,7 @@ export default (collection: CollectionConfig, plugin: WebpPlugin) => {
             ...getFileMetadataFields(({ data }) =>
               afterReadUrlHookAction(
                 data?.webp?.sizes?.[size.name]?.filename,
-                (collection.upload as IncomingUploadType).staticURL || collection.slug,
+                (collection.upload as IncomingUploadType).staticURL || ('/' + collection.slug),
                 plugin.payloadConfig.serverURL,
               ),
             ),
