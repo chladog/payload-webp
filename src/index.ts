@@ -1,4 +1,4 @@
-import { Plugin } from 'payload/config';
+import { Config, Plugin } from 'payload/config';
 
 import { WebpPluginOptions } from './config.interface';
 import { WebpPlugin } from './Plugin';
@@ -13,7 +13,7 @@ import defaultResizeFactory from './utils/defaultResizeFactory';
  import { defaultResizeFactory } from "payload-webp";// you may use this as fallback in your resizeOptsFactory
 ```
  */
-const webp: (pluginOptions?: WebpPluginOptions) => Plugin = (pluginOptions) => (incomingConfig) => {
+const webp: (pluginOptions?: WebpPluginOptions) => Plugin = (pluginOptions) => (incomingConfig: Config) => {
   const convertor = new WebpPlugin(incomingConfig, pluginOptions);
   return convertor.config;
 };
